@@ -6,3 +6,5 @@
 /src/Keys.svelte
 
 public/index.css
+/public/Index.css
+./public/Index.css
