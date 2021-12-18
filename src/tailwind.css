@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+
+
+body {
+    margin: 0;
+    padding: 0;
+
+}
+
+h1.responsive {
+    @apply desktop:text-7xl laptop:text-6xl tablet:text-5xl mobile:text-4xl;
+}
+
+.h-fit-content {
+  height: fit-content;
+}
+.resizer {
+    @apply bg-gray-400;
+    width: 3px;
+    cursor: ew-resize;
+    min-width: 3px;
+}
+
+.text-shadow {
+    text-shadow: 0 2px 4px rgba(0,0,0,0.10);
+  }
+
+  .text-shadow-md {
+    text-shadow: 0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  .text-shadow-lg {
+    text-shadow: 0 15px 30px rgba(0,0,0,0.11), 0 5px 15px rgba(0,0,0,0.08);
+  }
+
+  .text-shadow-none {
+    text-shadow: none;
+  }
+
+@tailwind utilities;
