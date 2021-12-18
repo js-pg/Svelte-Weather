@@ -4,3 +4,5 @@
 .DS_Store
 
 /src/Keys.svelte
+
+/public/index.css
