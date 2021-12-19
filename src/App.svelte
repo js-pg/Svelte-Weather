@@ -1,4 +1,7 @@
 <script>
+	import { weatherKey } from "./Keys.svelte";
+	import { timeZoneKey } from "./Keys.svelte";
+
 	var aLcUsamk6 = false;
 
 	window.onresize = function () {
@@ -94,10 +97,18 @@
 		});
 	});
 
+	async function getTime(city) {
+		const response = await fetch(
+			`http://api.timezonedb.com/v2.1/get-time-zone?key=${timeZoneKey}&format=json&by=city&city=${city}`
+		);
+		const data = await response.json();
+		return data;
+	}
+
 	let iscalled;
 
-	async function getWeather(city, unit) {
-		var url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=7af0645f81d36888c9fca585b6611eb4`;
+	async function getWeather(city, unit, key) {
+		var url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${key}`;
 
 		iscalled = true;
 		let response = await fetch(url);
@@ -105,27 +116,77 @@
 		return data;
 	}
 
-	let city = "";
+	let city = "City";
+	let country = "";
 	let unit = {
 		full: "imperial",
 		short: "F",
 	};
-	let temp = "";
+	let temp = "Loading";
+	let time = {
+		time: "",
+		timeZoneCode: new Date()
+			.toLocaleDateString(undefined, {
+				day: "2-digit",
+				timeZoneName: "short",
+			})
+			.substring(4),
+	};
+	let status = "";
 
-	const promise = getWeather("London", unit.full);
+	getWeather("Dallas", unit.full, weatherKey).then(function (data) {
+		console.log(data);
+		city = data.name;
+		temp = data.main.temp;
+		status = data.weather[0].main;
+		country = data.sys.country;
 
-	getWeather("London", unit.full)
-		.then(function (data) {
+		//do something every second
+
+		var date = new Date(data.dt * 1000);
+		// Hours part from the timestamp
+		var hours = date.getHours();
+		// Minutes part from the timestamp
+		var minutes = "0" + date.getMinutes();
+		// Seconds part from the timestamp
+		var seconds = "0" + date.getSeconds();
+
+		// Will display time in 10:30:23 format
+		var formattedTime =
+			hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+
+		time.time = formattedTime;
+
+		time.time = moment(time.time, "HH:mm:ss").format("h:mm A");
+	});
+
+	window.setInterval(() => {
+		getWeather("Dallas", unit.full, weatherKey).then(function (data) {
 			console.log(data);
 			city = data.name;
 			temp = data.main.temp;
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
+			country = data.sys.country;
+			status = data.weather[0].main;
 
-	//function to get the time in a certain city
-		
+			//do something every second
+
+			var date = new Date(data.dt * 1000);
+			// Hours part from the timestamp
+			var hours = date.getHours();
+			// Minutes part from the timestamp
+			var minutes = "0" + date.getMinutes();
+			// Seconds part from the timestamp
+			var seconds = "0" + date.getSeconds();
+
+			// Will display time in 10:30:23 format
+			var formattedTime =
+				hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+
+			time.time = formattedTime;
+
+			time.time = moment(time.time, "HH:mm:ss").format("h:mm A");
+		});
+	}, 360000);
 </script>
 
 <main class="m-0 p-0">
@@ -135,23 +196,46 @@
 			style="background-image: linear-gradient(rgb(56, 189, 248), rgb(186, 230, 253))"
 		>
 			{#if iscalled}
-				<div class=" p-4">
-					<h3 class="py-4 text-2xl font-light">
-						Stats for <span class="font-semibold">{city}</span>:
-					</h3>
+				{#if city != "City"}
+					<div class=" py-4 px-2">
+						<h3 class="py-2 text-2xl font-light">
+							Weather for:
+							<span class="font-semibold">{city}, {country}</span
+							>:
+						</h3>
+						<p class="p-0 m-0">
+							Last updated: {time.time}, {time.timeZoneCode}
+						</p>
+						<div
+							class="py-2 flex flex-col justify-start items-start"
+						>
+							<h1 class="font-normal text-6xl py-2">
+								<span class="font-bold">{temp}°</span
+								>{unit.short}
+							</h1>
 
-					<div class=" flex flex-col justify-start items-start">
-						<h1 class="font-normal text-4xl py-2">
-							Temperature: <span class="font-bold">{temp}°</span
-							>{unit.short}
-						</h1>
-
-						<h1 class="font-normal text-4xl py-2">
-							Temperature: <span class="font-bold">{temp}°</span
-							>{unit.short}
-						</h1>
+							<h1 class="font-normal text-3xl py-2">
+								{status}
+							</h1>
+						</div>
 					</div>
-				</div>
+				{:else}
+					<div class=" p-4">
+						<h3 class="py-4 text-2xl font-light">
+							<span class=" font-light">Loading...</span>:
+						</h3>
+
+						<div class=" flex flex-col justify-start items-start">
+							<h1 class="font-normal text-4xl py-2">
+								Loading...
+							</h1>
+
+							<h1 class="font-normal text-4xl py-2">
+								Loading...
+							</h1>
+						</div>
+					</div>
+				{/if}
 			{/if}
 		</div>
 		<div class="resizer" data-direction="horizontal" />
