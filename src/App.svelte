@@ -1,6 +1,7 @@
 <script>
 	import { weatherKey } from "./Keys.svelte";
 	import { timeZoneKey } from "./Keys.svelte";
+	import { fade } from "svelte/transition";
 
 	var aLcUsamk6 = false;
 
@@ -97,15 +98,30 @@
 		});
 	});
 
-	async function getTime(city) {
-		const response = await fetch(
-			`http://api.timezonedb.com/v2.1/get-time-zone?key=${timeZoneKey}&format=json&by=city&city=${city}`
-		);
-		const data = await response.json();
-		return data;
+	let iscalled;
+
+	function unixToTime(unix) {
+		var date = new Date(unix * 1000);
+		var hours = date.getHours();
+		var minutes = "0" + date.getMinutes();
+		var seconds = "0" + date.getSeconds();
+		var formattedTime =
+			hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
+		
+		formattedTime = moment(formattedTime, "HH:mm:ss").format("h:mm A");
+
+		return formattedTime;
 	}
 
-	let iscalled;
+	console.log(unixToTime(1639893600));
+
+	async function getForecast() {
+		var url = `http://api.openweathermap.org/data/2.5/forecast?q=${city}&units=${unit.full}&appid=${weatherKey}`;
+
+		let response = await fetch(url);
+		let data = await response.json();
+		return data;
+	}
 
 	async function getWeather(city, unit, key) {
 		var url = `http://api.openweathermap.org/data/2.5/weather?q=${city}&units=${unit}&appid=${key}`;
@@ -143,21 +159,7 @@
 
 		//do something every second
 
-		var date = new Date(data.dt * 1000);
-		// Hours part from the timestamp
-		var hours = date.getHours();
-		// Minutes part from the timestamp
-		var minutes = "0" + date.getMinutes();
-		// Seconds part from the timestamp
-		var seconds = "0" + date.getSeconds();
-
-		// Will display time in 10:30:23 format
-		var formattedTime =
-			hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
-
-		time.time = formattedTime;
-
-		time.time = moment(time.time, "HH:mm:ss").format("h:mm A");
+		time.time = unixToTime(data.dt);
 	});
 
 	window.setInterval(() => {
@@ -170,21 +172,7 @@
 
 			//do something every second
 
-			var date = new Date(data.dt * 1000);
-			// Hours part from the timestamp
-			var hours = date.getHours();
-			// Minutes part from the timestamp
-			var minutes = "0" + date.getMinutes();
-			// Seconds part from the timestamp
-			var seconds = "0" + date.getSeconds();
-
-			// Will display time in 10:30:23 format
-			var formattedTime =
-				hours + ":" + minutes.substr(-2) + ":" + seconds.substr(-2);
-
-			time.time = formattedTime;
-
-			time.time = moment(time.time, "HH:mm:ss").format("h:mm A");
+			time.time = unixToTime(data.dt);
 		});
 	}, 360000);
 </script>
@@ -193,17 +181,17 @@
 	<div class="resize-contain h-screen w-full">
 		<div
 			class="container__left"
-			style="background-image: linear-gradient(rgb(56, 189, 248), rgb(186, 230, 253))"
+			style="background-image: linear-gradient(160deg, rgb(56, 189, 248), rgb(186, 230, 253))"
 		>
 			{#if iscalled}
 				{#if city != "City"}
-					<div class=" py-4 px-2">
+					<div class="py-4 px-2">
 						<h3 class="py-2 text-2xl font-light">
 							Weather for:
 							<span class="font-semibold">{city}, {country}</span
 							>:
 						</h3>
-						<p class="p-0 m-0">
+						<p class="p-0 m-0 text-xs">
 							Last updated: {time.time}, {time.timeZoneCode}
 						</p>
 						<div
@@ -219,30 +207,37 @@
 							</h1>
 						</div>
 					</div>
-				{:else}
-					<div class=" p-4">
-						<h3 class="py-4 text-2xl font-light">
-							<span class=" font-light">Loading...</span>:
-						</h3>
-
-						<div class=" flex flex-col justify-start items-start">
-							<h1 class="font-normal text-4xl py-2">
-								Loading...
-							</h1>
-
-							<h1 class="font-normal text-4xl py-2">
-								Loading...
-							</h1>
-						</div>
-					</div>
 				{/if}
 			{/if}
 		</div>
 		<div class="resizer" data-direction="horizontal" />
-		<div class="container__right">
-			<div class="container__top">Top</div>
-			<div class="resizer" data-direction="vertical" />
-			<div class="container__bottom" />
+		<div class="container__right w-50">
+			{#if iscalled}
+			{#if city != "City"}
+				<div class="py-4 px-2">
+					<h3 class="py-2 text-2xl font-light">
+						Weather for:
+						<span class="font-semibold">{city}, {country}</span
+						>:
+					</h3>
+					<p class="p-0 m-0 text-xs">
+						Last updated: {time.time}, {time.timeZoneCode}
+					</p>
+					<div
+						class="py-2 flex flex-col justify-start items-start"
+					>
+						<h1 class="font-normal text-6xl py-2">
+							<span class="font-bold">{temp}°</span
+							>{unit.short}
+						</h1>
+
+						<h1 class="font-normal text-3xl py-2">
+							{status}
+						</h1>
+					</div>
+				</div>
+			{/if}
+		{/if}
 		</div>
 	</div>
 </main>
@@ -265,13 +260,13 @@
 	}
 
 	.resizer[data-direction="horizontal"] {
-		background-color: #cbd5e0;
+		background-color: #353c42;
 		cursor: ew-resize;
 		height: 100%;
-		width: 4px;
+		width: 2px;
 	}
 	.resizer[data-direction="vertical"] {
-		background-color: #cbd5e0;
+		background-color: #000000;
 		cursor: ns-resize;
 		height: 4px;
 		width: 100%;
@@ -287,32 +282,7 @@
 		min-width: fit-content;
 	}
 	.container__right {
-		/* Take the remaining width */
-		flex: 1;
 
-		/* Misc */
-		align-items: center;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
-	.container__top {
-		/* Initial height */
-		height: 12rem;
-
-		/* Misc */
-		align-items: center;
-		display: flex;
-		justify-content: center;
-	}
-	.container__bottom {
-		/* Take the remaining height */
-		flex: 1;
-
-		/* Misc */
-		align-items: center;
-		display: flex;
-		justify-content: center;
 	}
 
 	@media (min-width: 640px) {
