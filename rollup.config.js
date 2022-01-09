@@ -5,6 +5,9 @@ import livereload from 'rollup-plugin-livereload';
 import { terser } from 'rollup-plugin-terser';
 import css from 'rollup-plugin-css-only';
 import json from '@rollup/plugin-json';
+import { initializeApp } from 'firebase/app';
+import { getAuth, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+
 
 const production = !process.env.ROLLUP_WATCH;
 
